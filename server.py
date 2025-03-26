@@ -97,6 +97,88 @@ class Client:
             self.win.geometry("600x500")
             self.gui_done=True
             self.win.mainloop()
+
+    def receive(self):
+        while self.running:
+            try:
+                # asking user for his nickname
+                message = self.sock.recv(1024).decode('utf-8')
+                if message == 'Uzytkownik\n':
+                    self.sock.send(self.nickname.encode('utf-8'))
+                else:
+                    if self.gui_done:
+                        self.text_area.config(state='normal')
+                        self.text_area.insert('end', message + "\n")
+                        self.text_area.yview('end')
+                        self.text_area.config(state="disabled")
+            except ConnectionAbortedError:
+                break
+            except Exception as e:
+                print(f"Zaszedl blad: {e}")
+                if self.running:
+                    self.display_system_message("Utracono polaczenie z serwerem")
+                    self.stop()
+                break
+
+
+    def handle_return(self, event):
+        # clicking Enter key sends message
+        if not event.state & 0x1:
+            self.write()
+            return "break"
+        return None
+
+
+    def write(self):
+        # message is data from the first line up to the next to last character
+        message = self.input_area.get('1.0', 'end-1c').strip()
+        if message:
+            if message.upper() == "QUIT":
+                self.send_message("Opuscil czat", system=True)
+                self.stop()
+            else:
+                self.send_message(message)
+
+        self.input_area.delete('1.0', 'end')
+        # text is cleared
+        self.input_area.focus()
+
+
+    def send_message(self, message, system=False):
+        try:
+            if system:
+                # display both user and his message
+                full_message = f"System: {self.nickname} {message}"
+            else:
+                full_message = f"{self.nickname}: {message}"
+
+            self.sock.send(full_message.encode('utf-8'))
+
+            if self.gui_done and not system:
+                self.text_area.config(state='normal')
+                self.text_area.insert('end', full_message + "\n")
+                self.text_area.yview('end')
+                self.text_area.config(state='disabled')
+
+        except Exception as e:
+            print(f"Blad podczas wysylania: {e}")
+            self.display_system_message("Nie mozna wyslac wiadomosci")
+
+    def display_system_message(self, message):
+        if self.gui_done:
+            self.text_area.config(state='normal')
+            self.text_area.insert('end', f"*** {message} ***\n")
+            self.text_area.yview('end')
+            self.text_area.config(state='disabled')
+
+    def stop(self):
+        print("Zamykanie klienta")
+        self.running=False
+        # if app window exists, close it
+        if hasattr(self, 'win') and self.win:
+            self.win.destroy()
+        self.sock.close()
+        sys.exit(0)
     
 def main():
     # required arguments to run app: (local)host and port
