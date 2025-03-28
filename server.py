@@ -6,6 +6,7 @@ import sys
 
 HOST = '127.0.0.1'
 PORT = 9090
+# python server.py 127.0.0.1 -p 9090
 
 class Server(threading.Thread):
 
