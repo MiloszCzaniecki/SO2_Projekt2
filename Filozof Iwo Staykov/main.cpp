@@ -7,16 +7,19 @@
 
 using namespace std;
 
+enum class State { THINKING, HUNGRY, EATING };
+
 class DiningPhilosophers {
 private:
     int num_philosophers;
-    vector<mutex> forks; 
+    vector<mutex> forks;
+    vector<State> states;
     vector<condition_variable> conditions;
-    vector<bool> eating;
+    mutex table_mutex;
     mutex output_mutex;
 
 public:
-    DiningPhilosophers(int n) : num_philosophers(n), forks(n), conditions(n), eating(n, false) {}
+    DiningPhilosophers(int n) : num_philosophers(n), forks(n), states(n, State::THINKING), conditions(n) {}
 
     void philosopher(int id) {
         while (true) {
@@ -34,13 +37,13 @@ public:
     }
 
     void pick_up_forks(int id) {
-        unique_lock<mutex> left_lock(forks[id]);
-        unique_lock<mutex> right_lock(forks[(id + 1) % num_philosophers]);
+        unique_lock<mutex> lock(table_mutex);
+        states[id] = State::HUNGRY;
 
-        conditions[id].wait(left_lock, [this, id] { return !eating[id]; });
-        conditions[(id + 1) % num_philosophers].wait(right_lock, [this, id] { return !eating[(id + 1) % num_philosophers]; });
+        // Wait until both forks are available
+        conditions[id].wait(lock, [this, id] { return can_eat(id); });
 
-        eating[id] = true;
+        states[id] = State::EATING;
     }
 
     void eat(int id) {
@@ -50,14 +53,22 @@ public:
     }
 
     void put_down_forks(int id) {
-        unique_lock<mutex> left_lock(forks[id]);
-        unique_lock<mutex> right_lock(forks[(id + 1) % num_philosophers]);
+        unique_lock<mutex> lock(table_mutex);
+        states[id] = State::THINKING;
 
-        eating[id] = false;
-
-        conditions[id].notify_one();
-        conditions[(id + 1) % num_philosophers].notify_one();
+        // Notify neighbors that forks are available
+        conditions[left(id)].notify_one();
+        conditions[right(id)].notify_one();
     }
+
+    bool can_eat(int id) {
+        return states[id] == State::HUNGRY &&
+               states[left(id)] != State::EATING &&
+               states[right(id)] != State::EATING;
+    }
+
+    int left(int id) { return (id + num_philosophers - 1) % num_philosophers; }
+    int right(int id) { return (id + 1) % num_philosophers; }
 };
 
 int main(int argc, char* argv[]) {

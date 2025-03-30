@@ -1,43 +1,41 @@
-# Dining Philosophers Problem
+# Problem Jedzących Filozofów
 
-## Introduction  
-The Dining Philosophers problem is a classic synchronization problem in computer science, formulated by Edsger Dijkstra in 1965. It illustrates the challenges of resource allocation and avoiding deadlocks in concurrent programming.  
+## Opis Zadania
 
-## Implementation  
-This solution implements the Dining Philosophers problem using C++ and `std::thread` for multithreading. The program ensures that philosophers alternate between thinking and eating while avoiding deadlocks.  
+Problem jedzących filozofów to klasyczny problem synchronizacji współbieżnych procesów, przedstawiony przez Edsgera Dijkstrę. Zadanie polega na zapewnieniu, że filozofowie (wątki) **mogą jeść i myśleć**, ale nigdy **nie dochodzi do zakleszczenia (deadlock)** ani **jednoczesnego jedzenia przez sąsiadów**.
 
-### Key Features  
-- Uses `std::thread` for concurrency  
-- Implements manual synchronization using mutexes  
-- Prevents deadlock through a structured locking mechanism  
-- Logs each philosopher's state in the console  
+W naszej implementacji użyto **muteksów (`std::mutex`) oraz zmiennych warunkowych (`std::condition_variable`)**, aby kontrolować dostęp do zasobów (widełek) i zapewnić sprawiedliwe przydzielanie czasu jedzenia.
 
-### Code Snippet  
-```cpp
-void philosopher(int id) {
-    while (true) {
-        think(id);
-        pick_up_forks(id);
-        eat(id);
-        put_down_forks(id);
-    }
-}
-```
+---
 
-## Execution
+## Sposób Działania
 
-Compile the program with the following command 
+1. **Każdy filozof zaczyna od myślenia.**  
+2. **Filozof, który chce jeść, sprawdza, czy jego sąsiedzi nie jedzą.**  
+   - Jeśli tak, musi poczekać.  
+   - Jeśli nie, podnosi oba widelce i zaczyna jeść.  
+3. **Po zakończeniu jedzenia filozof odkłada widelce i ponownie zaczyna myśleć.**  
+4. **Sąsiedzi są powiadamiani o dostępności widelców.**  
 
-```bash
-g++ -std=c++11 dining_philosophers.cpp -o dining_philosophers -pthread
-```
-The program takes the number of philosophers as a command-line argument:
+W programie zastosowano **trzy stany dla każdego filozofa**:
+- `THINKING` – filozof myśli.
+- `HUNGRY` – filozof chce jeść, ale czeka na dostępność widelców.
+- `EATING` – filozof je.
 
-```bash
+---
+
+## Uruchamianie Programu
+
+Aby uruchomić program, skompiluj kod i uruchom plik wykonywalny, podając liczbę filozofów jako argument:
+
+```sh
 ./dining_philosophers 5
 ```
-Each philosopher will continuously think and eat, with console outputs indicating their state.
 
-## Conclusion
-
-This implementation ensures that all philosophers get a chance to eat while preventing deadlocks. The alternating fork acquisition strategy provides a simple yet effective way to handle concurrent resource allocation.
+## Dodatkowe informacje o implementacji rozwiązania
+Główne mechanizmy użyte w implementacji:
+- Muteks (std::mutex) – zapewnia synchronizację dostępu do widełek.
+- Zmienna warunkowa (std::condition_variable) – pozwala filozofom czekać, aż widelce będą dostępne.
+- Stan filozofów (THINKING, HUNGRY, EATING) – kontroluje dostęp do zasobów.
+- Funkcja can_eat(int id) – sprawdza, czy filozof może rozpocząć jedzenie.
+- Zapewniona sprawiedliwość – filozofowie nie głodują i nie blokują się wzajemnie.
