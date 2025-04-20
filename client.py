@@ -154,15 +154,15 @@ class Client:
                 # display both user and his message
                 full_message = f"System: {self.nickname} {message}"
             else:
-                full_message = f"{self.nickname}: {message}"
+                full_message = message
 
             self.sock.send(full_message.encode('utf-8'))
 
-            if self.gui_done and not system:
-                self.text_area.config(state='normal')
-                self.text_area.insert('end', full_message + "\n")
-                self.text_area.yview('end')
-                self.text_area.config(state='disabled')
+            # if self.gui_done and not system:
+            #     self.text_area.config(state='normal')
+            #     self.text_area.insert('end', full_message + "\n")
+            #     self.text_area.yview('end')
+            #     self.text_area.config(state='disabled')
 
         except Exception as e:
             print(f"Blad podczas wysylania: {e}")

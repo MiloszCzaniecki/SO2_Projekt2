@@ -20,8 +20,7 @@ class Server(threading.Thread):
     # every connected client receives a message
     def broadcast(self, message, source):
         for client in self.connections:
-            if source is None or client.sockname != source:
-                client.send(message)
+            client.send(message)
 
     # creating socket to enable server work
     def run(self):
