@@ -39,18 +39,20 @@ class Server(threading.Thread):
             server_socket = ServerSocket(sc, sockname, self, nickname)
             server_socket.start()
 
-            self.connections.append(server_socket)
-            self.nicknames.append(nickname)
+            with self.lock:
+                self.connections.append(server_socket)
+                self.nicknames.append(nickname)
 
             self.broadcast(f"\n{nickname} dołączył(a) do czatu\n".encode('utf-8'), None)
 
     def remove_connection(self, connection):
-        if connection in self.connections:
-            index = self.connections.index(connection)
-            nickname = self.nicknames[index]
-            self.connections.remove(connection)
-            self.nicknames.pop(index)
-            self.broadcast(f"{nickname} opuścił(a) czat\n".encode('utf-8'), None)
+        with self.lock:
+            if connection in self.connections:
+                index = self.connections.index(connection)
+                nickname = self.nicknames[index]
+                self.connections.remove(connection)
+                self.nicknames.pop(index)
+                self.broadcast(f"{nickname} opuścił(a) czat\n".encode('utf-8'), None)
 
     def get_nickname(self, sockname):
         for index, connection in enumerate(self.connections):
@@ -93,11 +95,13 @@ class ServerSocket(threading.Thread):
 
     def send(self, message):
         try:
-            self.sc.sendall(message)
+            with threading.Lock():  # Local lock, could also be a class-wide lock
+                self.sc.sendall(message)
         except Exception as e:
             print(f"Błąd przy wysyłaniu do {self.nickname}: {e}")
             self.sc.close()
             self.server.remove_connection(self)
+
 
 
 def exit_server(server):
