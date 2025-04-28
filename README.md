@@ -1,5 +1,10 @@
 # Projekt 2 - Wielowątkowy serwer czatu
 
+## Autorzy
+
+Miłosz Czaniecki 272872
+Iwo Staykov 259259
+
 ## Opis
 
 Projekt implementuje prosty, wielowątkowy serwer czatu, umożliwiający wielu użytkownikom jednoczesne komunikowanie się. Składa się z dwóch programów:
