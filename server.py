@@ -70,7 +70,7 @@ class ServerSocket(threading.Thread):
         self.nickname = nickname
 
     def run(self):
-        # ✅ Send message history right after thread starts (client is ready now)
+        # Send message history
         with self.server.lock:
             for msg in self.server.message_history:
                 self.send(msg)

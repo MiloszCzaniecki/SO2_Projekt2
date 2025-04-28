@@ -13,7 +13,7 @@ class Client:
         self.nickname = None
         self.gui_done = False
         self.running = True
-        self.message_buffer = []  # ✅ Buffer for archive messages before GUI is ready
+        self.message_buffer = []  # Buffer for archive messages before GUI is ready
 
     def connect(self):
         print(f"Łączenie z {self.host}:{self.port}...")
@@ -91,7 +91,7 @@ class Client:
         self.win.geometry("600x500")
         self.gui_done = True
 
-        # ✅ Display buffered messages
+        # Display messages from the buffer
         for msg in self.message_buffer:
             self.display_message(msg)
         self.message_buffer.clear()
